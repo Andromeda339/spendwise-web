@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SpendWise — облік особистих і сімейних витрат</title>
+  <meta name="description" content="SpendWise: веб-сторінка проєкту обліку витрат. Лабораторна робота №1.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="#">SpendWise</a>
+    <nav aria-label="Основна навігація">
+      <a href="#demo">Спробувати</a>
+      <a href="#stack">Стек</a>
+      <a href="#flow">Як це працює</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-text">
+        <h1>Усі витрати в одному місці</h1>
+        <p>Записуйте витрати вручну або фотографуйте чек: сума розпізнається автоматично. Рахунки, бюджети та спільний сімейний облік.</p>
+      </div>
+
+      <section id="demo" class="receipt" aria-labelledby="demo-title">
+        <h2 id="demo-title">Додати витрату</h2>
+        <form id="expense-form" novalidate>
+          <label>Назва
+            <input id="title" name="title" type="text" maxlength="60" placeholder="Наприклад, продукти" required>
+          </label>
+          <div class="row">
+            <label>Сума, ₴
+              <input id="amount" name="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required>
+            </label>
+            <label>Категорія
+              <select id="category" name="category">
+                <option>Продукти</option>
+                <option>Транспорт</option>
+                <option>Дозвілля</option>
+                <option>Здоров'я</option>
+                <option>Інше</option>
+              </select>
+            </label>
+          </div>
+          <label>Дата
+            <input id="date" name="date" type="date" required>
+          </label>
+          <p id="form-error" class="error" role="alert" hidden></p>
+          <button type="submit">Додати витрату</button>
+        </form>
+
+        <div class="total">
+          <span>Разом</span>
+          <strong id="total">0,00 ₴</strong>
+        </div>
+        <ul id="bars" class="bars" aria-label="Витрати за категоріями"></ul>
+      </section>
+    </section>
+
+    <section class="history" aria-labelledby="history-title">
+      <h2 id="history-title">Останні витрати</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Дата</th><th>Назва</th><th>Категорія</th><th class="num">Сума</th><th><span class="sr">Дії</span></th></tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+      <p id="empty" class="empty" hidden>Витрат ще немає. Додайте першу у формі вище.</p>
+      <p class="note">Дані зберігаються лише на сторінці й зникнуть після оновлення. Підключення до сервера буде в наступних лабораторних.</p>
+    </section>
+
+    <section id="stack" class="stack" aria-labelledby="stack-title">
+      <h2 id="stack-title">Технологічний стек</h2>
+      <dl>
+        <div><dt>HTML5</dt><dd>Розмітка сторінки: семантичні теги, форми з вбудованою перевіркою полів.</dd></div>
+        <div><dt>CSS3</dt><dd>Оформлення: змінні, flex і grid, адаптивність, світла й темна теми.</dd></div>
+        <div><dt>JavaScript</dt><dd>Поведінка в браузері: обробка форми, оновлення таблиці та сум без перезавантаження.</dd></div>
+        <div><dt>Node.js</dt><dd>Серверна частина SpendWise: обробка запитів, бізнес-логіка, робота з файлами чеків.</dd></div>
+        <div><dt>Prisma ORM</dt><dd>Опис моделей бази даних і запити до неї з коду.</dd></div>
+        <div><dt>REST API</dt><dd>Правила обміну між клієнтом і сервером: ресурси, методи GET, POST, PUT, DELETE, формат JSON.</dd></div>
+      </dl>
+    </section>
+
+    <section id="flow" class="flow" aria-labelledby="flow-title">
+      <h2 id="flow-title">Як рухаються дані</h2>
+      <ol>
+        <li><strong>Браузер</strong><span>Користувач вводить витрату або завантажує фото чека.</span></li>
+        <li><strong>REST API</strong><span>Сервер перевіряє запит і дані.</span></li>
+        <li><strong>База даних</strong><span>Транзакції, рахунки й бюджети зберігаються через Prisma.</span></li>
+        <li><strong>OCR-сервіс</strong><span>З фото чека виймається сума й повертається у форму.</span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer>
+    <p>SpendWise · Лабораторна робота №1 · Якимович О. В., ІП-23-4</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
