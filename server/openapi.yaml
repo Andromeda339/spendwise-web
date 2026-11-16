@@ -1,0 +1,495 @@
+openapi: 3.0.3
+info:
+  title: SpendWise API
+  version: 1.0.0
+  description: |
+    REST API застосунку SpendWise для обліку особистих і сімейних витрат.
+
+    **Авторизація.** Усі ресурси, крім `/health`, вимагають токен Firebase у заголовку
+    `Authorization: Bearer <ID token>`.
+
+    **Суми.** Поля типу Decimal (`balance`, `amount`) сервер повертає рядками, наприклад `"250.50"`.
+    У запитах їх можна передавати числами.
+
+    **Ідентифікатори.** `accountId` і `categoryId` у тілі запитів мають бути числами.
+servers:
+  - url: http://localhost:5000
+    description: Локальний сервер
+tags:
+  - name: Health
+  - name: Auth
+  - name: Accounts
+    description: Рахунки користувача
+  - name: Categories
+    description: Категорії доходів і витрат
+  - name: Transactions
+    description: Транзакції, перекази, статистика та експорт
+  - name: Budgets
+    description: Місячні ліміти витрат за категоріями
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Перевірка стану сервера
+      security: []
+      responses:
+        "200":
+          description: Сервер працює
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  uptime: { type: number, description: Час роботи в секундах, example: 123.4 }
+                  timestamp: { type: string, format: date-time }
+
+  /api/auth/sync:
+    post:
+      tags: [Auth]
+      summary: Синхронізувати користувача Firebase з базою даних
+      responses:
+        "200": { description: Користувача синхронізовано, content: { application/json: { schema: { type: object } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/accounts:
+    get:
+      tags: [Accounts]
+      summary: Отримати всі доступні рахунки
+      responses:
+        "200":
+          description: Список рахунків
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Account" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Accounts]
+      summary: Створити рахунок
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/AccountInput" } } }
+      responses:
+        "201": { description: Рахунок створено, content: { application/json: { schema: { $ref: "#/components/schemas/Account" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/accounts/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      tags: [Accounts]
+      summary: Отримати рахунок за id
+      responses:
+        "200": { description: Рахунок, content: { application/json: { schema: { $ref: "#/components/schemas/Account" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    put:
+      tags: [Accounts]
+      summary: Оновити рахунок
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                type: { $ref: "#/components/schemas/AccountType" }
+                balance: { type: number }
+                currency: { $ref: "#/components/schemas/Currency" }
+      responses:
+        "200": { description: Оновлений рахунок, content: { application/json: { schema: { $ref: "#/components/schemas/Account" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Accounts]
+      summary: Видалити рахунок (лише власник)
+      responses:
+        "200": { $ref: "#/components/responses/Message" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/categories:
+    get:
+      tags: [Categories]
+      summary: Отримати категорії (системні та власні)
+      responses:
+        "200": { description: Список категорій, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Category" } } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Categories]
+      summary: Створити власну категорію
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/CategoryInput" } } }
+      responses:
+        "201": { description: Категорію створено, content: { application/json: { schema: { $ref: "#/components/schemas/Category" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/categories/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Categories]
+      summary: Оновити власну категорію (системні змінювати не можна)
+      requestBody:
+        content: { application/json: { schema: { $ref: "#/components/schemas/CategoryInput" } } }
+      responses:
+        "200": { description: Оновлена категорія, content: { application/json: { schema: { $ref: "#/components/schemas/Category" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      tags: [Categories]
+      summary: Видалити власну категорію
+      responses:
+        "200": { $ref: "#/components/responses/Message" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/transactions:
+    get:
+      tags: [Transactions]
+      summary: Отримати транзакції з пагінацією та фільтрами
+      parameters:
+        - { name: accountId, in: query, schema: { type: integer }, description: Лише транзакції цього рахунку }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: limit, in: query, schema: { type: integer, default: 10 } }
+        - $ref: "#/components/parameters/StartDate"
+        - $ref: "#/components/parameters/EndDate"
+      responses:
+        "200": { description: Сторінка транзакцій, content: { application/json: { schema: { $ref: "#/components/schemas/TransactionPage" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Transactions]
+      summary: Створити транзакцію (баланс рахунку оновлюється)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/TransactionInput" } } }
+      responses:
+        "201": { description: Транзакцію створено, content: { application/json: { schema: { $ref: "#/components/schemas/Transaction" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/transactions/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    put:
+      tags: [Transactions]
+      summary: Оновити транзакцію
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/TransactionInput" } } }
+      responses:
+        "200": { description: Оновлена транзакція, content: { application/json: { schema: { $ref: "#/components/schemas/Transaction" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [Transactions]
+      summary: Видалити транзакцію (баланс коригується)
+      responses:
+        "200": { $ref: "#/components/responses/Message" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/transactions/transfer:
+    post:
+      tags: [Transactions]
+      summary: Переказ між рахунками
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/TransferInput" } } }
+      responses:
+        "201":
+          description: Переказ виконано
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Переказ успішно виконано }
+                  data: { type: object }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/transactions/summary:
+    get:
+      tags: [Transactions]
+      summary: Підсумок доходів і витрат за період
+      parameters:
+        - { name: accountId, in: query, schema: { type: integer } }
+        - $ref: "#/components/parameters/StartDate"
+        - $ref: "#/components/parameters/EndDate"
+      responses:
+        "200": { description: Підсумок, content: { application/json: { schema: { $ref: "#/components/schemas/Summary" } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/transactions/stats:
+    get:
+      tags: [Transactions]
+      summary: Статистика за категоріями
+      parameters:
+        - { name: startDate, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: endDate, in: query, required: true, schema: { type: string, format: date-time } }
+        - { name: type, in: query, schema: { $ref: "#/components/schemas/TransactionType" }, description: За замовчуванням EXPENSE }
+      responses:
+        "200":
+          description: Суми за категоріями
+          content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/CategoryStat" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/transactions/export:
+    get:
+      tags: [Transactions]
+      summary: Експорт транзакцій у CSV
+      parameters:
+        - { name: accountId, in: query, schema: { type: integer } }
+        - $ref: "#/components/parameters/StartDate"
+        - $ref: "#/components/parameters/EndDate"
+      responses:
+        "200": { description: CSV-файл, content: { text/csv: { schema: { type: string } } } }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /api/transactions/scan:
+    post:
+      tags: [Transactions]
+      summary: Розпізнати фото чека (OCR)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [receipt]
+              properties:
+                receipt: { type: string, format: binary, description: Фото чека }
+      responses:
+        "200":
+          description: Результат розпізнавання
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string }
+                  scannedData: { type: object, additionalProperties: true }
+                  receiptUrl: { type: string, nullable: true }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/budgets:
+    get:
+      tags: [Budgets]
+      summary: Отримати бюджети на місяць
+      parameters:
+        - { name: month, in: query, required: true, schema: { type: integer, minimum: 1, maximum: 12 } }
+        - { name: year, in: query, required: true, schema: { type: integer, example: 2026 } }
+      responses:
+        "200": { description: Список бюджетів, content: { application/json: { schema: { type: array, items: { $ref: "#/components/schemas/Budget" } } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    post:
+      tags: [Budgets]
+      summary: Встановити або оновити бюджет
+      requestBody:
+        required: true
+        content: { application/json: { schema: { $ref: "#/components/schemas/BudgetInput" } } }
+      responses:
+        "200": { description: Бюджет збережено, content: { application/json: { schema: { $ref: "#/components/schemas/Budget" } } } }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/budgets/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    delete:
+      tags: [Budgets]
+      summary: Видалити бюджет
+      responses:
+        "200": { $ref: "#/components/responses/Message" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Firebase ID token
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      description: Числовий id (або clientId, який створює мобільний застосунок)
+      schema: { type: string }
+      example: "1"
+    StartDate:
+      name: startDate
+      in: query
+      schema: { type: string, format: date-time }
+      description: Початок періоду (ISO 8601)
+    EndDate:
+      name: endDate
+      in: query
+      schema: { type: string, format: date-time }
+      description: Кінець періоду (ISO 8601)
+  responses:
+    BadRequest:
+      description: Некоректні дані запиту
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Unauthorized:
+      description: Токен відсутній, недійсний або прострочений
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Forbidden:
+      description: Немає прав на цей ресурс
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NotFound:
+      description: Ресурс не знайдено
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Message:
+      description: Операцію виконано
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string, example: Рахунок успішно видалено }
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string, example: Недійсний або прострочений токен }
+    AccountType: { type: string, enum: [CASH, CARD, DEPOSIT, JAR, OTHER] }
+    Currency: { type: string, enum: [UAH, USD, EUR] }
+    TransactionType: { type: string, enum: [INCOME, EXPENSE] }
+    Account:
+      type: object
+      properties:
+        id: { type: integer, example: 1 }
+        clientId: { type: string, nullable: true }
+        userId: { type: string }
+        householdId: { type: integer, nullable: true }
+        name: { type: string, example: Privat_24 }
+        type: { $ref: "#/components/schemas/AccountType" }
+        currency: { $ref: "#/components/schemas/Currency" }
+        balance: { type: string, example: "4714.50" }
+        createdAt: { type: string, format: date-time }
+    AccountInput:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, example: Готівка }
+        type: { $ref: "#/components/schemas/AccountType" }
+        balance: { type: number, example: 1000 }
+        currency: { $ref: "#/components/schemas/Currency" }
+        isFamilyAccount: { type: boolean, default: false }
+        clientId: { type: string }
+    Category:
+      type: object
+      properties:
+        id: { type: integer, example: 3 }
+        name: { type: string, example: Продукти }
+        type: { $ref: "#/components/schemas/TransactionType" }
+        isStorage: { type: boolean }
+        userId: { type: string, nullable: true, description: null для системних категорій }
+        householdId: { type: integer, nullable: true }
+    CategoryInput:
+      type: object
+      required: [name, type]
+      properties:
+        name: { type: string, example: Книжки }
+        type: { $ref: "#/components/schemas/TransactionType" }
+        isStorage: { type: boolean, default: false }
+        clientId: { type: string }
+    Transaction:
+      type: object
+      properties:
+        id: { type: integer }
+        clientId: { type: string, nullable: true }
+        accountId: { type: integer }
+        categoryId: { type: integer }
+        userId: { type: string, nullable: true }
+        type: { $ref: "#/components/schemas/TransactionType" }
+        amount: { type: string, example: "250.50" }
+        description: { type: string, nullable: true }
+        transactionDate: { type: string, format: date-time }
+        createdAt: { type: string, format: date-time }
+        isTransfer: { type: boolean }
+        relatedAccountId: { type: integer, nullable: true }
+        category: { $ref: "#/components/schemas/Category" }
+        account: { $ref: "#/components/schemas/Account" }
+    TransactionInput:
+      type: object
+      required: [accountId, categoryId, type, amount, transactionDate]
+      properties:
+        accountId: { type: integer, example: 1 }
+        categoryId: { type: integer, example: 3 }
+        type: { $ref: "#/components/schemas/TransactionType" }
+        amount: { type: number, example: 250.5 }
+        transactionDate: { type: string, example: "2026-11-10", description: Дата у форматі ISO 8601 }
+        description: { type: string }
+        receiptUrl: { type: string }
+        clientId: { type: string }
+    TransferInput:
+      type: object
+      required: [fromAccountId, toAccountId, amount]
+      properties:
+        fromAccountId: { type: integer }
+        toAccountId: { type: integer }
+        amount: { type: number, example: 100 }
+        description: { type: string }
+        date: { type: string, example: "2026-11-10" }
+    TransactionPage:
+      type: object
+      properties:
+        data: { type: array, items: { $ref: "#/components/schemas/Transaction" } }
+        meta:
+          type: object
+          properties:
+            totalItems: { type: integer }
+            currentPage: { type: integer }
+            itemsPerPage: { type: integer }
+            totalPages: { type: integer }
+    Summary:
+      type: object
+      properties:
+        totalIncome: { type: number }
+        totalExpense: { type: number }
+        netBalance: { type: number }
+    CategoryStat:
+      type: object
+      properties:
+        categoryId: { type: integer }
+        categoryName: { type: string }
+        totalAmount: { type: number }
+    Budget:
+      type: object
+      properties:
+        id: { type: integer }
+        categoryId: { type: integer }
+        maxAmount: { type: string, example: "5000.00" }
+        month: { type: integer }
+        year: { type: integer }
+    BudgetInput:
+      type: object
+      required: [categoryId, maxAmount, month, year]
+      properties:
+        categoryId: { type: integer }
+        maxAmount: { type: number, example: 5000 }
+        month: { type: integer, minimum: 1, maximum: 12 }
+        year: { type: integer, example: 2026 }
+        isPersonal: { type: boolean, default: true }
+        clientId: { type: string }
