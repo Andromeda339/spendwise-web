@@ -1,50 +1,42 @@
-# SpendWise API (Backend)
+# SpendWise server
 
-A RESTful API service for a personal finance management application. It provides robust backend infrastructure to handle multi-currency accounts, track expenses, manage shared family budgets, and automatically parse receipt data.
+Серверна частина SpendWise: Node.js + Express 5, Prisma ORM, PostgreSQL (Neon), Firebase Authentication.
 
-## 🚀 Key Features
+## Структура
 
-* **Secure Authentication:** User registration and login using JWT (JSON Web Tokens).
-* **Database Management:** Efficient relational database architecture managed with Prisma ORM and PostgreSQL.
-* **Smart Receipt Scanning:** Integration with a third-party OCR service and Regex-based parsing to automatically extract expense amounts from receipt images.
-* **Financial Logic:** Full CRUD operations for transactions, multi-currency accounts, and shared family budgets.
+```
+server/
+├── src/
+│   ├── server.js        точка входу, middleware, /health, /api-docs
+│   ├── routes/          маршрути
+│   ├── controllers/     обробка запитів і відповідей
+│   ├── services/        бізнес-логіка і робота з БД через Prisma
+│   ├── middleware/      перевірка токена Firebase, завантаження файлів
+│   └── config/          підключення до БД і Firebase
+├── prisma/              схема, міграції, seed
+├── openapi.yaml         специфікація OpenAPI 3.0
+└── postman/             колекція та оточення Postman
+```
 
-## 🛠 Tech Stack
+## Запуск
 
-* **Runtime:** Node.js
-* **Framework:** Express.js
-* **Database:** PostgreSQL
-* **ORM:** Prisma
-* **Security:** JWT (JSON Web Tokens)
-
-## ⚙️ Local Setup & Installation
-
-### 1. Clone the repository
-git clone <your_new_repository_url_here>
-cd spendwise-api
-
-### 2. Install dependencies
+```bash
 npm install
-
-### 3. Setup Database
-Create a new PostgreSQL database (e.g., finance_db).
-
-### 4. Configure Environment Variables
-Create a .env file in the root directory and copy the contents from .env.example. Make sure to update it with your actual credentials:
-
-DATABASE_URL="postgresql://user:password@localhost:5432/finance_db?schema=public"
-JWT_SECRET="your_super_secret_key"
-PORT=3000
-
-### 5. Run Prisma Migrations
-Sync your database schema:
-npx prisma migrate dev
-
-### 6. Start the Server
-Run the application in development mode:
 npm run dev
+```
 
-The server will start on http://localhost:3000.
+Потрібні файли `.env` (змінні з `.env.example`) та `firebase-admin.json`. Вони не потрапляють у Git.
 
-## 🧪 Testing API
-All endpoints have been rigorously tested. You can import the provided Postman collection (if available in the repository) to test the routes locally.
+## Перевірка
+
+- Стан сервера: <http://localhost:5000/health>
+- Документація (Swagger UI): <http://localhost:5000/api-docs>
+- Специфікація у JSON: <http://localhost:5000/api-docs.json>
+
+## Тестування в Postman
+
+1. Імпортуйте `postman/SpendWise.postman_collection.json` і `postman/local.postman_environment.json`.
+2. Оберіть оточення **SpendWise local**, заповніть `email` і `password` користувача Firebase (акаунт з паролем).
+3. Запустіть колекцію через Collection Runner. Перший запит отримує `idToken`, решта використовують його автоматично.
+
+Колекція створює тестові рахунки й категорію, а наприкінці видаляє їх.
