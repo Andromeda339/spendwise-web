@@ -1,22 +1,23 @@
 import express from 'express';
-import { 
-  createAccount, 
-  getAccounts, 
-  getAccountById, 
-  updateAccount, 
-  deleteAccount 
+import {
+  createAccount,
+  getAccounts,
+  getAccountById,
+  updateAccount,
+  deleteAccount
 } from '../controllers/accountController.js';
 import { protect } from '../middleware/authMiddleware.js';
+import { validate } from '../middleware/validate.js';
+import { accountCreate, accountUpdate } from '../validation/schemas.js';
 
 const router = express.Router();
 
-// Застосовуємо охоронця до ВСІХ маршрутів у цьому файлі
 router.use(protect);
 
-router.post('/', createAccount);       // Створення рахунку
-router.get('/', getAccounts);         // Отримання всіх доступних рахунків
-router.get('/:id', getAccountById);   // Отримання одного рахунку за ID
-router.put('/:id', updateAccount);     // Оновлення рахунку за ID
-router.delete('/:id', deleteAccount);  // Видалення рахунку за ID
+router.post('/', validate(accountCreate), createAccount);
+router.get('/', getAccounts);
+router.get('/:id', getAccountById);
+router.put('/:id', validate(accountUpdate), updateAccount);
+router.delete('/:id', deleteAccount);
 
 export default router;

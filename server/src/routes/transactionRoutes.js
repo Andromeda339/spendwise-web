@@ -1,9 +1,8 @@
 import express from 'express';
-import multer from 'multer';
-import { 
-  createTransaction, 
-  getTransactions, 
-  updateTransaction,  
+import {
+  createTransaction,
+  getTransactions,
+  updateTransaction,
   deleteTransaction,
   getStats,
   getSummary,
@@ -13,47 +12,37 @@ import {
   scanReceipt
 } from '../controllers/transactionController.js';
 import { protect } from '../middleware/authMiddleware.js';
-import { upload } from '../middleware/uploadMiddleware.js'; 
+import { upload, uploadScan } from '../middleware/uploadMiddleware.js';
+import { validate } from '../middleware/validate.js';
+import { scanLimiter } from '../middleware/security.js';
+import {
+  transactionCreate, transactionUpdate, transfer,
+  transactionsQuery, summaryQuery, statsQuery
+} from '../validation/schemas.js';
 
 const router = express.Router();
-
-// Налаштовуємо Multer для сканера (пам'ять)
-const uploadMemory = multer({ storage: multer.memoryStorage() });
 
 // Усі маршрути нижче захищені токеном
 router.use(protect);
 
-router.post('/', createTransaction);
-router.get('/', getTransactions);
+router.post('/', validate(transactionCreate), createTransaction);
+router.get('/', validate(transactionsQuery, 'query'), getTransactions);
 
-// ПЕРЕКАЗИ
-router.post('/transfer', transferFunds);
+// Перекази
+router.post('/transfer', validate(transfer), transferFunds);
 
-// СТАТИСТИКА ТА ЕКСПОРТ (перед маршрутами з /:id)
-router.get('/stats', getStats); 
-router.get('/summary', getSummary); 
-router.get('/export', exportTransactionsCsv); 
+// Статистика та експорт (перед маршрутами з /:id)
+router.get('/stats', validate(statsQuery, 'query'), getStats);
+router.get('/summary', validate(summaryQuery, 'query'), getSummary);
+router.get('/export', validate(summaryQuery, 'query'), exportTransactionsCsv);
 
-// СКАНЕР ЧЕКІВ (Залишено без змін за твоїм запитом)
-router.post('/scan', uploadMemory.single('receipt'), scanReceipt);
+// Сканер чеків: суворіший ліміт запитів, лише зображення до 5 МБ
+router.post('/scan', scanLimiter, uploadScan.single('receipt'), scanReceipt);
 
-// ЧЕКИ: завантаження фото для конкретної транзакції (в Cloudinary)
-router.post('/:id/receipt', (req, res, next) => {
-  const uploadMiddleware = upload.single('receipt');
-  
-  uploadMiddleware(req, res, (err) => {
-    if (err) {
-      console.error("🔴 СПРАВЖНЯ ПОМИЛКА CLOUDINARY:", err);
-      return res.status(500).json({ 
-        error: "Щось пішло не так при завантаженні", 
-        details: err.message || err 
-      });
-    }
-    next();
-  });
-}, uploadReceipt);
+// Фото чека для транзакції (помилки завантаження обробляє errorHandler)
+router.post('/:id/receipt', upload.single('receipt'), uploadReceipt);
 
-router.put('/:id', updateTransaction);     
-router.delete('/:id', deleteTransaction);  
+router.put('/:id', validate(transactionUpdate), updateTransaction);
+router.delete('/:id', deleteTransaction);
 
 export default router;
