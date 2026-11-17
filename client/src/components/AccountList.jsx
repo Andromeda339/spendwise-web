@@ -1,19 +1,27 @@
 import { useState } from "react";
 import { api } from "../api";
 import { ACCOUNT_TYPES, money } from "../format";
+import { validateAccount } from "../validators";
+import Field from "./Field.jsx";
+
+const empty = { name: "", type: "CARD", balance: "0" };
 
 export default function AccountList({ accounts, onChanged }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: "", type: "CARD", balance: "0" });
+  const [form, setForm] = useState(empty);
+  const [errors, setErrors] = useState({});
   const [error, setError] = useState("");
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
+    const found = validateAccount(form);
+    setErrors(found);
+    if (Object.keys(found).length) return;
     setError("");
     try {
       await api.createAccount({ name: form.name.trim(), type: form.type, balance: Number(form.balance) || 0, currency: "UAH" });
-      setForm({ name: "", type: "CARD", balance: "0" });
+      setForm(empty);
       setOpen(false);
       onChanged();
     } catch (err) { setError(err.message); }
@@ -26,12 +34,18 @@ export default function AccountList({ accounts, onChanged }) {
         <button className="ghost" onClick={() => setOpen(!open)}>{open ? "Скасувати" : "+ Додати рахунок"}</button>
       </div>
       {open && (
-        <form className="inline" onSubmit={submit}>
-          <input placeholder="Назва" value={form.name} onChange={set("name")} required maxLength={40} />
-          <select value={form.type} onChange={set("type")}>
-            {Object.entries(ACCOUNT_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-          <input type="number" step="0.01" placeholder="Початковий баланс" value={form.balance} onChange={set("balance")} />
+        <form className="inline" onSubmit={submit} noValidate>
+          <Field label="Назва" error={errors.name}>
+            <input value={form.name} onChange={set("name")} maxLength={50} aria-invalid={!!errors.name} />
+          </Field>
+          <Field label="Тип">
+            <select value={form.type} onChange={set("type")}>
+              {Object.entries(ACCOUNT_TYPES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+            </select>
+          </Field>
+          <Field label="Початковий баланс" error={errors.balance}>
+            <input type="number" step="0.01" value={form.balance} onChange={set("balance")} aria-invalid={!!errors.balance} />
+          </Field>
           <button>Створити</button>
           {error && <p className="error">{error}</p>}
         </form>

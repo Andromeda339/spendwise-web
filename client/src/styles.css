@@ -1,5 +1,7 @@
 :root { --bg:#eef2ef; --surface:#fff; --ink:#12231d; --muted:#55665f; --line:#cfd9d3; --accent:#0e5a43; --on:#fff; --plus:#0e7a4f; --minus:#b3261e; color-scheme: light; }
-@media (prefers-color-scheme: dark) { :root { --bg:#0f1b17; --surface:#17261f; --ink:#e8f0ec; --muted:#9bb0a6; --line:#2b3f36; --accent:#4fc79d; --on:#08241a; --plus:#5fd9a8; --minus:#ff8a80; color-scheme: dark; } }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { --bg:#0f1b17; --surface:#17261f; --ink:#e8f0ec; --muted:#9bb0a6; --line:#2b3f36; --accent:#4fc79d; --on:#08241a; --plus:#5fd9a8; --minus:#ff8a80; color-scheme: dark; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme]) { --bg:#0f1b17; --surface:#17261f; --ink:#e8f0ec; --muted:#9bb0a6; --line:#2b3f36; --accent:#4fc79d; --on:#08241a; --plus:#5fd9a8; --minus:#ff8a80; color-scheme: dark; } }
 * { box-sizing: border-box; }
 body { margin:0; background:var(--bg); color:var(--ink); font:400 1rem/1.5 "Golos Text", system-ui, sans-serif; }
 h1, h2 { font-family:"Unbounded", "Golos Text", sans-serif; margin:0; }
@@ -31,3 +33,17 @@ th, td { text-align:left; padding:.6rem .5rem; border-bottom:1px solid var(--lin
 .error { color:var(--minus); margin:0; } .banner { background:var(--surface); border:1px solid var(--minus); border-radius:8px; padding:.75rem 1rem; }
 .center { text-align:center; margin-top:4rem; } .login { width:min(400px, 100% - 2rem); margin:5rem auto; display:grid; gap:.9rem; }
 @media (max-width:900px) { .grid { grid-template-columns:1fr; } .inline { grid-template-columns:1fr; } .filters { grid-template-columns:1fr 1fr; } }
+
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--minus); }
+.field-error { color: var(--minus); font-size: .82rem; font-weight: 400; }
+.hint { color: var(--muted); font-size: .82rem; margin: 0; }
+.check { display: flex; align-items: center; gap: .5rem; font-weight: 400; }
+.check input { width: auto; }
+.budget-form { grid-template-columns: 2fr 1fr auto; align-items: end; }
+.budgets { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .9rem; }
+.budgets li { display: grid; gap: .35rem; }
+.budgets .row span { display: flex; align-items: center; gap: .5rem; }
+.bar { height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; }
+.bar span { display: block; height: 100%; background: var(--accent); }
+.bar span.over { background: var(--minus); }
+@media (max-width: 900px) { .budget-form { grid-template-columns: 1fr; } }

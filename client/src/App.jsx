@@ -3,8 +3,11 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "./firebase";
 import { api } from "./api";
 import { isTransfer, money, num } from "./format";
+import { loadJSON, removeKey, saveJSON } from "./storage";
+import { useTheme } from "./theme";
 import LoginPage from "./components/LoginPage.jsx";
 import AccountList from "./components/AccountList.jsx";
+import BudgetPanel from "./components/BudgetPanel.jsx";
 import TransactionForm from "./components/TransactionForm.jsx";
 import TransactionFilters from "./components/TransactionFilters.jsx";
 import TransactionTable from "./components/TransactionTable.jsx";
@@ -13,17 +16,21 @@ const emptyFilters = { from: "", to: "", accountId: "", type: "", categoryId: ""
 
 export default function App() {
   const [user, setUser] = useState(undefined); // undefined = ще перевіряємо сесію
+  const [theme, toggleTheme] = useTheme();
   useEffect(() => onAuthStateChanged(auth, setUser), []);
   if (user === undefined) return <p className="center">Завантаження…</p>;
-  return user ? <Dashboard user={user} /> : <LoginPage />;
+  return user ? <Dashboard user={user} theme={theme} toggleTheme={toggleTheme} /> : <LoginPage />;
 }
 
-function Dashboard({ user }) {
+function Dashboard({ user, theme, toggleTheme }) {
   const [accounts, setAccounts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [filters, setFilters] = useState(emptyFilters);
+  // Останні фільтри відновлюються з localStorage
+  const [filters, setFilters] = useState(() => ({ ...emptyFilters, ...loadJSON("sw.filters", {}) }));
   const [tx, setTx] = useState({ data: [], meta: null });
   const [status, setStatus] = useState({ loading: true, error: "" });
+
+  useEffect(() => { saveJSON("sw.filters", filters); }, [filters]);
 
   // Період і рахунок фільтрує сервер, решту (тип, категорія, пошук) — клієнт.
   const reload = useCallback(async () => {
@@ -64,13 +71,20 @@ function Dashboard({ user }) {
     catch (e) { setStatus((s) => ({ ...s, error: e.message })); }
   };
 
+  // При виході прибираємо з браузера дані, пов’язані з користувачем (на спільному комп’ютері)
+  const logout = () => { removeKey("sw.draft"); removeKey("sw.filters"); signOut(auth); };
+
   const balance = accounts.filter((a) => a.currency === "UAH").reduce((s, a) => s + num(a.balance), 0);
 
   return (
     <div className="page">
       <header className="top">
         <h1>SpendWise</h1>
-        <div className="user"><span>{user.email}</span><button className="ghost" onClick={() => signOut(auth)}>Вийти</button></div>
+        <div className="user">
+          <button className="ghost" onClick={toggleTheme} aria-label="Змінити тему">{theme === "dark" ? "Світла тема" : "Темна тема"}</button>
+          <span>{user.email}</span>
+          <button className="ghost" onClick={logout}>Вийти</button>
+        </div>
       </header>
 
       {status.error && <p className="error banner" role="alert">{status.error} <button className="ghost" onClick={reload}>Повторити</button></p>}
@@ -83,6 +97,7 @@ function Dashboard({ user }) {
       </section>
 
       <AccountList accounts={accounts} onChanged={reload} />
+      <BudgetPanel categories={categories} />
 
       <div className="grid">
         <TransactionForm accounts={accounts} categories={categories} onCreated={reload} />

@@ -1,3 +1,4 @@
+import { signOut } from "firebase/auth";
 import { auth } from "./firebase";
 
 const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
@@ -14,7 +15,17 @@ async function request(path, { method = "GET", body, params } = {}) {
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || `Помилка сервера (${res.status})`);
+
+  // Сесія недійсна: завершуємо її, і застосунок повертає користувача на екран входу
+  if (res.status === 401) {
+    await signOut(auth);
+    throw new Error("Сесія завершилась. Увійдіть знову.");
+  }
+  if (!res.ok) {
+    // Сервер повертає перелік помилок валідації у полі details
+    const details = Array.isArray(data.details) ? data.details.map((d) => `${d.field}: ${d.message}`).join("; ") : "";
+    throw new Error(details || data.error || `Помилка сервера (${res.status})`);
+  }
   return data;
 }
 
@@ -26,4 +37,7 @@ export const api = {
   summary: (params) => request("/api/transactions/summary", { params }),
   createTransaction: (body) => request("/api/transactions", { method: "POST", body }),
   deleteTransaction: (id) => request(`/api/transactions/${id}`, { method: "DELETE" }),
+  budgets: (params) => request("/api/budgets", { params }),
+  setBudget: (body) => request("/api/budgets", { method: "POST", body }),
+  deleteBudget: (id) => request(`/api/budgets/${id}`, { method: "DELETE" }),
 };
