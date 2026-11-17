@@ -12,6 +12,11 @@ info:
     У запитах їх можна передавати числами.
 
     **Ідентифікатори.** `accountId` і `categoryId` у тілі запитів мають бути числами.
+
+    **Валідація.** Некоректні дані відхиляються кодом 400 з переліком помилок у полі `details`.
+
+    **Безпека.** Сервер додає захисні заголовки (Helmet), обмежує частоту запитів (код 429), розмір JSON
+    (100 КБ) і завантажених зображень (5 МБ, JPG/PNG/WebP), а також дозволяє браузерні запити лише з відомих адрес (CORS).
 servers:
   - url: http://localhost:5000
     description: Локальний сервер
@@ -287,6 +292,8 @@ paths:
                   receiptUrl: { type: string, nullable: true }
         "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
 
   /api/budgets:
     get:
@@ -348,7 +355,7 @@ components:
       description: Кінець періоду (ISO 8601)
   responses:
     BadRequest:
-      description: Некоректні дані запиту
+      description: Некоректні дані запиту (поле details містить перелік помилок валідації)
       content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
     Unauthorized:
       description: Токен відсутній, недійсний або прострочений
@@ -358,6 +365,12 @@ components:
       content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
     NotFound:
       description: Ресурс не знайдено
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    TooManyRequests:
+      description: Перевищено ліміт запитів (заголовки RateLimit-Limit, RateLimit-Remaining, RateLimit-Reset)
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    PayloadTooLarge:
+      description: Завеликий файл або тіло запиту
       content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
     Message:
       description: Операцію виконано
@@ -372,6 +385,14 @@ components:
       type: object
       properties:
         error: { type: string, example: Недійсний або прострочений токен }
+        details:
+          type: array
+          description: Перелік помилок валідації (лише для відповіді 400)
+          items:
+            type: object
+            properties:
+              field: { type: string, example: amount }
+              message: { type: string, example: Сума має бути більшою за нуль }
     AccountType: { type: string, enum: [CASH, CARD, DEPOSIT, JAR, OTHER] }
     Currency: { type: string, enum: [UAH, USD, EUR] }
     TransactionType: { type: string, enum: [INCOME, EXPENSE] }
