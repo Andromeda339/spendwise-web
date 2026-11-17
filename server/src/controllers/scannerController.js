@@ -7,6 +7,7 @@ export const scanReceipt = async (req, res) => {
     const result = await processReceipt(req.file.buffer);
     res.status(200).json({ message: 'Чек успішно відскановано', scannedData: result });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };

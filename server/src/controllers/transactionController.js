@@ -49,7 +49,8 @@ export const getTransactions = async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -96,7 +97,8 @@ export const getStats = async (req, res) => {
     
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -116,7 +118,8 @@ export const getSummary = async (req, res) => {
 
     res.json(summary);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -152,7 +155,8 @@ export const exportTransactionsCsv = async (req, res) => {
     
     return res.send(bom + csv);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 

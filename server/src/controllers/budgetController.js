@@ -25,7 +25,8 @@ export const getBudgets = async (req, res) => {
     const budgets = await budgetService.getBudgets(userId, householdId, month, year);
     res.status(200).json(budgets);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -51,6 +52,7 @@ export const deleteBudget = async (req, res) => {
     await budgetService.deleteBudget(id, userId);
     res.json({ message: 'Бюджет успішно видалено' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };

@@ -17,7 +17,8 @@ export const createHousehold = async (req, res) => {
     const newHousehold = await householdService.createHousehold(userId, name, clientId);
     res.status(201).json(newHousehold);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -54,7 +55,8 @@ export const getHousehold = async (req, res) => {
     const household = await householdService.getHouseholdById(userHouseholdId);
     res.status(200).json(household);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -69,7 +71,8 @@ export const getStats = async (req, res) => {
     const stats = await householdService.getHouseholdStats(userHouseholdId);
     res.json(stats);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -90,6 +93,7 @@ export const leaveHousehold = async (req, res) => {
 
     res.status(200).json({ message: 'Ви успішно вийшли з родини.' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };

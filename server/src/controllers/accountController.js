@@ -24,7 +24,8 @@ export const createAccount = async (req, res) => {
     const account = await accountService.createAccount(userId, name, type, balance, currency, safeHouseholdId, clientId);
     res.status(201).json(account);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -34,7 +35,8 @@ export const getAccounts = async (req, res) => {
     const accounts = await accountService.getAccountsByUserId(userId);
     res.json(accounts);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -60,7 +62,8 @@ export const getAccountById = async (req, res) => {
 
     res.json(account);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -95,7 +98,8 @@ export const updateAccount = async (req, res) => {
     const updatedAccount = await accountService.updateAccount(id, userId, { name, type, balance, currency });
     res.json(updatedAccount);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
 
@@ -117,6 +121,7 @@ export const deleteAccount = async (req, res) => {
     await accountService.deleteAccount(id, userId);
     res.json({ message: 'Рахунок успішно видалено' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'Внутрішня помилка сервера' });
   }
 };
