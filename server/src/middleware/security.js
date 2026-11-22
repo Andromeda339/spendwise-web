@@ -2,10 +2,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 
-// Дозволені адреси вебклієнта (через кому в .env). Власну адресу сервера додаємо для Swagger UI.
+// Дозволені адреси вебклієнта (через кому в .env). Власну адресу сервера додаємо для Swagger UI:
+// локально це localhost, на Render платформа сама задає RENDER_EXTERNAL_URL (публічна адреса сервісу).
 const allowedOrigins = [
   ...(process.env.CORS_ORIGINS || 'http://localhost:5173').split(',').map((s) => s.trim()),
   `http://localhost:${process.env.PORT || 5000}`,
+  process.env.RENDER_EXTERNAL_URL,
 ].filter(Boolean);
 
 // Захисні HTTP-заголовки (X-Content-Type-Options, Strict-Transport-Security тощо, прибирає X-Powered-By)
