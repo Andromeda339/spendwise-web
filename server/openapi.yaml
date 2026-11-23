@@ -18,6 +18,8 @@ info:
     **Безпека.** Сервер додає захисні заголовки (Helmet), обмежує частоту запитів (код 429), розмір JSON
     (100 КБ) і завантажених зображень (5 МБ, JPG/PNG/WebP), а також дозволяє браузерні запити лише з відомих адрес (CORS).
 servers:
+  - url: https://spendwise-web-srj2.onrender.com
+    description: Хмарний сервер (Render)
   - url: http://localhost:5000
     description: Локальний сервер
 tags:

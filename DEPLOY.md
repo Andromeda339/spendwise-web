@@ -106,3 +106,12 @@ $u = "https://<api>.onrender.com/health"
 | Клієнт звертається до `localhost` | `VITE_API_URL` не задано в Static Site або після його зміни не було нового деплою |
 | `Cannot find package 'dotenv'` або `prisma` у логах збірки | Пакети мають бути в `dependencies`, а Build Command має містити `npm run build` |
 | Сервіс перезапускається в циклі | Health Check Path вказує на повільний шлях; має бути `/health` |
+
+## 7. Адреси розгорнутої системи
+
+| Сервіс | Адреса |
+|---|---|
+| Клієнт | https://spendwise-web-client.onrender.com |
+| API | https://spendwise-web-srj2.onrender.com |
+| Swagger UI | https://spendwise-web-srj2.onrender.com/api-docs |
+| Перевірки | https://spendwise-web-srj2.onrender.com/health та /ready |
