@@ -38,3 +38,5 @@ const limiter = (limit, message) => rateLimit({
 export const apiLimiter = limiter(Number(process.env.RATE_LIMIT_MAX) || 600, 'Забагато запитів. Спробуйте пізніше.');
 export const authLimiter = limiter(60, 'Забагато спроб входу. Спробуйте пізніше.');
 export const scanLimiter = limiter(20, 'Забагато спроб сканування чеків. Спробуйте пізніше.');
+// Квота безкоштовного Gemini обмежена, тому запити до AI-помічника лімітуємо суворіше (змінна AI_RATE_LIMIT)
+export const aiLimiter = limiter(Number(process.env.AI_RATE_LIMIT) || 30, 'Забагато запитів до AI-помічника. Спробуйте за кілька хвилин.');

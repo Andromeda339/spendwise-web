@@ -12,6 +12,7 @@ import accountRoutes from './routes/accountRoutes.js';
 import transactionRoutes from './routes/transactionRoutes.js';
 import budgetRoutes from './routes/budgetRoutes.js';
 import householdRoutes from './routes/householdRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -90,6 +91,7 @@ app.use('/api/accounts', accountRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/budgets', budgetRoutes);
 app.use('/api/households', householdRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 5. Невідомі маршрути та єдиний обробник помилок (завжди останніми)
 app.use(notFound);

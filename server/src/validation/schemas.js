@@ -99,3 +99,16 @@ export const budgetsQuery = z.object({
 // ---- родини ----
 export const householdCreate = z.object({ name: text(50, 'Назва'), clientId: optText(100) });
 export const householdJoin = z.object({ inviteCode: text(30, 'Код запрошення') });
+
+// ---- AI-помічник ----
+// Історія чату: до 10 повідомлень, останнє — від користувача. Відповіді помічника можуть бути довгими.
+export const aiChat = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['user', 'assistant']),
+    content: text(4000, 'Повідомлення'),
+  })).min(1, 'Потрібне хоча б одне повідомлення').max(10, 'Забагато повідомлень в історії'),
+}).refine((d) => d.messages.at(-1)?.role === 'user', 'Останнє повідомлення має бути від користувача');
+
+export const aiParse = z.object({
+  text: text(300, 'Текст'),
+});
