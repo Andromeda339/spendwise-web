@@ -8,6 +8,7 @@ import { useTheme } from "./theme";
 import LoginPage from "./components/LoginPage.jsx";
 import AccountList from "./components/AccountList.jsx";
 import BudgetPanel from "./components/BudgetPanel.jsx";
+import AiAssistant from "./components/AiAssistant.jsx";
 import TransactionForm from "./components/TransactionForm.jsx";
 import TransactionFilters from "./components/TransactionFilters.jsx";
 import TransactionTable from "./components/TransactionTable.jsx";
@@ -98,6 +99,7 @@ function Dashboard({ user, theme, toggleTheme }) {
 
       <AccountList accounts={accounts} onChanged={reload} />
       <BudgetPanel categories={categories} />
+      <AiAssistant accounts={accounts} categories={categories} onCreated={reload} />
 
       <div className="grid">
         <TransactionForm accounts={accounts} categories={categories} onCreated={reload} />

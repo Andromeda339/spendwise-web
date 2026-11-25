@@ -35,3 +35,11 @@ export const validateBudget = ({ categoryId, maxAmount }) => {
   if (maxAmount === "" || !Number.isFinite(Number(maxAmount)) || Number(maxAmount) <= 0) e.maxAmount = "Введіть ліміт більший за нуль";
   return e;
 };
+
+// Текст для AI-помічника: непорожній і не довший за ліміт (повертає текст помилки або порожній рядок)
+export const validateAiText = (text, max) => {
+  const t = text.trim();
+  if (!t) return "Напишіть текст";
+  if (t.length > max) return `Текст не довший за ${max} символів`;
+  return "";
+};

@@ -40,4 +40,7 @@ export const api = {
   budgets: (params) => request("/api/budgets", { params }),
   setBudget: (body) => request("/api/budgets", { method: "POST", body }),
   deleteBudget: (id) => request(`/api/budgets/${id}`, { method: "DELETE" }),
+  // AI-помічник: ключ Gemini зберігається лише на сервері, клієнт звертається до власного API
+  aiChat: (messages) => request("/api/ai/chat", { method: "POST", body: { messages } }),
+  aiParse: (text) => request("/api/ai/parse", { method: "POST", body: { text } }),
 };
